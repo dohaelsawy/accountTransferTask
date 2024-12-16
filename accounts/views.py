@@ -1,4 +1,6 @@
 import csv
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +9,7 @@ from .models import Account
 from .serializers import AccountSerializer, CsvFileSerializer
 from io import TextIOWrapper
 from rest_framework.parsers import (MultiPartParser, FormParser)
+from rest_framework.decorators import action
 
 
 class ImportAccountsView(APIView):
@@ -51,4 +54,16 @@ class AccountManagement(viewsets.ModelViewSet):
         queryset = self.queryset
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
+    
+    def retrieve(self, request, pk=None):
+        try:
+            account = get_object_or_404(Account, pk=pk)
+            serializer = AccountSerializer(account)
+            return Response(serializer.data)
+        except Http404:
+            return Response(
+                {'error': "The requested Space does not exist."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+   
