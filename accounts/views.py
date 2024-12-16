@@ -6,11 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 from .models import Account
-from .serializers import AccountSerializer, CsvFileSerializer
+from .serializers import AccountSerializer, CsvFileSerializer, TransferFundsSerializer
 from io import TextIOWrapper
 from rest_framework.parsers import (MultiPartParser, FormParser)
 from rest_framework.decorators import action
-
+from django.db import transaction
+from decimal import Decimal, InvalidOperation
 
 class ImportAccountsView(APIView):
 
@@ -45,16 +46,25 @@ class ImportAccountsView(APIView):
         return Response({"error": "No file uploaded or invalid request."}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AccountManagement(viewsets.ModelViewSet):
+class AccountManagementViewSet(viewsets.ModelViewSet):
 
     queryset = Account.objects.all()
-    serializer_class = AccountSerializer
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.action == 'transfer_funds':
+            return TransferFundsSerializer
+        else :
+            return AccountSerializer
+
+
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset
+        queryset = Account.objects.all()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
+
+
     def retrieve(self, request, pk=None):
         try:
             account = get_object_or_404(Account, pk=pk)
@@ -65,5 +75,27 @@ class AccountManagement(viewsets.ModelViewSet):
                 {'error': "The requested Space does not exist."}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+
+    @action(detail=False, methods=['post'])
+    def transfer_funds(self, request, *args, **kwargs):
+
+        from_account = Account.objects.get(id=request.data['from_account_id'])
+        to_account = Account.objects.get(id=request.data['to_account_id'])
+        amount = request.data['amount']
+
+        try:
+            if Decimal(from_account.balance) < Decimal(amount):
+                return Response({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
+
+            with transaction.atomic():
+                from_account.balance -= Decimal(amount)
+                to_account.balance += Decimal(amount)
+                from_account.save()
+                to_account.save()
+
+            return Response({"message": "Transfer successful!"})
         
-   
+        except (Account.DoesNotExist, InvalidOperation) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
