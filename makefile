@@ -12,3 +12,9 @@ swagger:
 	python manage.py spectacular --file schema.yml
 test:
 	python manage.py test
+up:
+	docker-compose up
+down:
+	docker-compose down
+req:
+	pip freeze > requirements.txt
