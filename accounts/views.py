@@ -10,7 +10,6 @@ from io import TextIOWrapper
 from rest_framework.decorators import action
 from django.db import transaction
 from decimal import Decimal, InvalidOperation
-from drf_spectacular.utils import extend_schema
 
 
 
@@ -100,28 +99,24 @@ class AccountManagementViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
-    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(
             {'error': 'create is not permitted'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
-    @extend_schema(exclude=True)
     def update(self, request, *args, **kwargs):
         return Response(
             {'error': 'Update is not permitted'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
-    @extend_schema(exclude=True)
     def partial_update(self, request, *args, **kwargs):
         return Response(
             {'error': 'update is not permitted'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
-    @extend_schema(exclude=True)
     def destroy(self, request, *args, **kwargs):
         return Response(
             {'error': 'delete is not permitted'},

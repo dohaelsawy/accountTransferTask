@@ -10,3 +10,5 @@ delete-none-image-docker:
 	docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 swagger:
 	python manage.py spectacular --file schema.yml
+test:
+	python manage.py test
