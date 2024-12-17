@@ -61,7 +61,7 @@ class AccountManagementViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = Account.objects.all()
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
@@ -69,7 +69,7 @@ class AccountManagementViewSet(viewsets.ModelViewSet):
         try:
             account = get_object_or_404(Account, pk=pk)
             serializer = AccountSerializer(account)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Http404:
             return Response(
                 {'error': "The requested Space does not exist."}, 
@@ -95,7 +95,7 @@ class AccountManagementViewSet(viewsets.ModelViewSet):
                 from_account.save()
                 to_account.save()
 
-            return Response({"message": "Transfer successful!"})
+            return Response({"message": "Transfer successful!"}, status=status.HTTP_200_OK)
         
         except (Account.DoesNotExist, InvalidOperation) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
